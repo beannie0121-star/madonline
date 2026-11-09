@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마음 쉼터 - 스트레스 해소 웹앱 | SNU Lab</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#090d16',
+                        cardBg: '#131b2e',
+                        accentFlame: '#f97316',
+                        accentScream: '#6366f1',
+                    },
+                    animation: {
+                        'shake-heavy': 'shake 0.12s ease-in-out infinite',
+                        'flicker': 'flicker 1.5s infinite alternate',
+                    },
+                    keyframes: {
+                        shake: {
+                            '0%, 100%': { transform: 'translate(0, 0) rotate(0deg)' },
+                            '25%': { transform: 'translate(-5px, 4px) rotate(-1.5deg)' },
+                            '50%': { transform: 'translate(5px, -3px) rotate(1.5deg)' },
+                            '75%': { transform: 'translate(-3px, -4px) rotate(-0.5deg)' },
+                        },
+                        flicker: {
+                            '0%, 100%': { opacity: 0.9, filter: 'drop-shadow(0 0 15px rgba(249, 115, 22, 0.6))' },
+                            '50%': { opacity: 1, filter: 'drop-shadow(0 0 35px rgba(234, 88, 12, 0.9))' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts Inter & Caveat (Handwriting font) -->
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Gowun+Batang:wght@400;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Realistic Paper Texture & Styles */
+        .paper-texture {
+            background-color: #f4ebd0;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.8), rgba(240, 225, 195, 0.95)),
+                repeating-linear-gradient(0deg, transparent, transparent 1.8rem, rgba(180, 160, 120, 0.15) 1.8rem, rgba(180, 160, 120, 0.15) 1.9rem);
+            box-shadow: 
+                inset 0 0 30px rgba(120, 90, 40, 0.25),
+                inset 0 0 8px rgba(0, 0, 0, 0.1),
+                0 15px 35px rgba(0, 0, 0, 0.6);
+            border-radius: 4px;
+            position: relative;
+        }
+
+        /* Torn paper edge effect */
+        .paper-texture::before {
+            content: "";
+            position: absolute;
+            top: -3px; left: 0; right: 0;
+            height: 6px;
+            background: linear-gradient(135deg, transparent 45%, #f4ebd0 50%, transparent 55%),
+                        linear-gradient(45deg, transparent 45%, #f4ebd0 50%, transparent 55%);
+            background-size: 12px 12px;
+        }
+
+        /* Ink Handwriting Style */
+        .ink-text {
+            font-family: 'Gowun Batang', 'Caveat', cursive, serif;
+            color: #1a1614;
+            line-height: 1.8rem;
+            letter-spacing: 0.5px;
+            text-shadow: 0.3px 0.3px 0.5px rgba(0,0,0,0.3);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090d16;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-darkBg text-slate-100 min-h-screen flex flex-col justify-between selection:bg-orange-500 selection:text-white">
+
+    <!-- Header -->
+    <header class="w-full border-b border-slate-800/80 bg-slate-900/70 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg tracking-tight bg-gradient-to-r from-orange-400 to-indigo-400 bg-clip-text text-transparent">MindRelease Lab</h1>
+                    <p class="text-xs text-slate-400">SNU 소프트웨어학과 조교 피터의 스트레스 연구실</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="switchTab('burner')" id="tab-btn-burner" class="px-4 py-2 rounded-lg text-sm font-medium transition-all bg-orange-600/20 text-orange-400 border border-orange-500/30 shadow-sm">
+                    🔥 리얼 고민 불태우기
+                </button>
+                <button onclick="switchTab('scream')" id="tab-btn-scream" class="px-4 py-2 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800">
+                    🗣️ 홀드 투 스크림
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Assistant Peter's Intro Banner -->
+    <div class="max-w-4xl mx-auto px-6 pt-6 w-full">
+        <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex items-center space-x-4 shadow-md">
+            <div class="w-11 h-11 rounded-full bg-indigo-600/30 border border-indigo-400/30 flex items-center justify-center text-xl shrink-0">
+                👨‍💻
+            </div>
+            <div class="text-xs sm:text-sm text-slate-300">
+                <span class="font-bold text-indigo-400">조교 피터:</span> "학업, 디버깅, 연구로 지치셨나요? 
+                종이에 마음속 과제나 버그를 적고 <strong class="text-orange-400">진짜 불꽃</strong>으로 태워버리거나, 버튼을 눌러 시원하게 소리를 질러보세요!"
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-4xl w-full mx-auto px-6 py-6 flex flex-col justify-center">
+
+        <!-- Tool 1: Worries Burner (Realistic Fire Canvas) -->
+        <section id="tool-burner" class="space-y-6">
+            <div class="text-center space-y-1">
+                <h2 class="text-2xl font-bold tracking-tight text-slate-100">리얼 고민 종이 불태우기</h2>
+                <p class="text-xs text-slate-400">진짜 종이 질감 위에 마음의 짐을 적고, 생동감 넘치는 불꽃 입자로 소멸시키세요.</p>
+            </div>
+
+            <!-- Main Wrapper for Fire Effect Glow -->
+            <div id="burnerGlowContainer" class="relative transition-all duration-300">
+                
+                <!-- Inner Paper Container -->
+                <div id="paperWrapper" class="relative paper-texture p-6 sm:p-8 transition-transform duration-500">
+                    
+                    <!-- Paper Content Header -->
+                    <div class="flex items-center justify-between mb-3 border-b border-amber-900/10 pb-2">
+                        <span class="text-xs font-extrabold tracking-widest uppercase text-amber-900/70">Confidential Note</span>
+                        <span id="charCount" class="text-xs text-amber-900/60 font-mono">0 / 500자</span>
+                    </div>
+
+                    <!-- Handwritten Text Area -->
+                    <textarea id="worryInput" maxlength="500" placeholder="여기에 태워버릴 고민을 자유롭게 적으세요...&#10;(예: 3일째 원인 못 찾은 세그멘테이션 폴트, 이번 학기 과제 폭탄...)" class="w-full h-52 bg-transparent ink-text focus:outline-none resize-none placeholder-amber-900/40 text-base leading-relaxed"></textarea>
+                    
+                    <div class="mt-4 flex items-center justify-between border-t border-amber-900/10 pt-3">
+                        <button onclick="clearWorry()" class="px-4 py-2 rounded-lg text-xs font-semibold text-amber-900/60 hover:text-amber-950 hover:bg-amber-900/10 transition-colors">
+                            지우기
+                        </button>
+                        <button onclick="ignitePaper()" id="burnBtn" class="flex items-center space-x-2 bg-gradient-to-r from-orange-600 via-amber-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white px-7 py-3 rounded-xl font-bold shadow-xl shadow-orange-600/30 transform active:scale-95 transition-all cursor-pointer">
+                            <span class="text-lg">🔥</span>
+                            <span>불태우기 (Ignite)</span>
+                        </button>
+                    </div>
+
+                    <!-- Canvas Overlay for Fire Particle Simulation & Char Burning Mask -->
+                    <canvas id="fireCanvas" class="absolute inset-0 w-full h-full pointer-events-none rounded-sm hidden z-20"></canvas>
+                </div>
+
+                <!-- Success State Overlay -->
+                <div id="burnSuccess" class="hidden bg-cardBg border border-slate-800 rounded-2xl p-10 text-center space-y-4 shadow-2xl z-30">
+                    <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-orange-500/20 to-amber-500/20 border border-orange-500/40 flex items-center justify-center text-orange-400 text-3xl mx-auto shadow-inner">
+                        ✨
+                    </div>
+                    <div class="space-y-2">
+                        <h3 class="text-xl font-bold text-orange-300">종이가 완벽하게 재가 되어 날아갔습니다!</h3>
+                        <p class="text-xs text-slate-400">머릿속 가득했던 고민도 깨끗이 비워졌습니다. 다시 가벼운 마음으로 시작해보세요.</p>
+                    </div>
+                    <button onclick="resetBurner()" class="mt-4 bg-orange-600/20 hover:bg-orange-600/30 text-orange-300 border border-orange-500/40 px-6 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md">
+                        새 종이에 다시 쓰기
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tool 2: Hold-to-Scream -->
+        <section id="tool-scream" class="space-y-6 hidden">
+            <div class="text-center space-y-1">
+                <h2 class="text-2xl font-bold tracking-tight">홀드 투 스크림 (Hold-to-Scream)</h2>
+                <p class="text-xs text-slate-400">버튼을 꾹 누르고 마음속 답답함을 소리로 방출하세요.</p>
+            </div>
+
+            <div id="screamCard" class="relative bg-cardBg border border-slate-800 rounded-2xl p-8 shadow-2xl flex flex-col items-center justify-center overflow-hidden min-h-[380px]">
+                
+                <!-- Sound Wave Canvas Background -->
+                <canvas id="screamCanvas" class="absolute inset-0 w-full h-full pointer-events-none opacity-40"></canvas>
+
+                <!-- Intensity Gauge -->
+                <div class="w-full max-w-xs mb-8 z-10 space-y-2">
+                    <div class="flex justify-between text-xs font-medium text-slate-400">
+                        <span>데시벨 방출 강도</span>
+                        <span id="intensityText" class="font-mono text-indigo-400 font-bold">0%</span>
+                    </div>
+                    <div class="w-full h-3.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800 p-0.5 shadow-inner">
+                        <div id="intensityBar" class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full transition-all duration-75" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Big Interactive Scream Button -->
+                <div class="relative z-10 flex flex-col items-center">
+                    <button id="screamBtn" class="w-48 h-48 rounded-full bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-extrabold text-lg shadow-2xl shadow-indigo-600/50 flex flex-col items-center justify-center transform active:scale-95 transition-all select-none focus:outline-none ring-4 ring-indigo-500/20">
+                        <svg class="w-14 h-14 mb-2 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z"></path>
+                        </svg>
+                        <span>소리지르기</span>
+                        <span class="text-xs font-normal opacity-80 mt-1">(꾹 누르고 있기)</span>
+                    </button>
+                </div>
+
+                <!-- Feedback Text -->
+                <p id="screamFeedback" class="mt-6 text-xs text-slate-400 z-10 text-center h-6">버튼을 길게 눌러 묵은 스트레스를 날리세요.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-800 border border-slate-700 text-slate-200 px-4 py-3 rounded-xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center space-x-3 text-sm">
+        <span id="toastIcon">💡</span>
+        <span id="toastMsg">알림 메시지입니다.</span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="w-full border-t border-slate-800/80 bg-slate-900/40 py-4 text-center text-xs text-slate-500">
+        <p>&copy; 2026 Seoul National University - Software Lab. All rights reserved.</p>
+    </footer>
+
+    <!-- Script Logic -->
+    <script>
+        // Tab Switcher
+        function switchTab(tab) {
+            const burnerSection = document.getElementById('tool-burner');
+            const screamSection = document.getElementById('tool-scream');
+            const burnerBtn = document.getElementById('tab-btn-burner');
+            const screamBtn = document.getElementById('tab-btn-scream');
+
+            if (tab === 'burner') {
+                burnerSection.classList.remove('hidden');
+                screamSection.classList.add('hidden');
+                burnerBtn.className = 'px-4 py-2 rounded-lg text-sm font-medium transition-all bg-orange-600/20 text-orange-400 border border-orange-500/30 shadow-sm';
+                screamBtn.className = 'px-4 py-2 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800';
+            } else {
+                burnerSection.classList.add('hidden');
+                screamSection.classList.remove('hidden');
+                screamBtn.className = 'px-4 py-2 rounded-lg text-sm font-medium transition-all bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 shadow-sm';
+                burnerBtn.className = 'px-4 py-2 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800';
+                initScreamCanvas();
+            }
+        }
+
+        function showToast(msg, icon = '💡') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            document.getElementById('toastIcon').innerText = icon;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // --- REALISTIC FIRE & PAPER BURNING SYSTEM ---
+        const worryInput = document.getElementById('worryInput');
+        const charCount = document.getElementById('charCount');
+
+        worryInput.addEventListener('input', (e) => {
+            charCount.innerText = `${e.target.value.length} / 500자`;
+        });
+
+        function clearWorry() {
+            worryInput.value = '';
+            charCount.innerText = '0 / 500자';
+            showToast('종이를 깨끗하게 지웠습니다.', '🧹');
+        }
+
+        function ignitePaper() {
+            const text = worryInput.value.trim();
+            if (!text) {
+                showToast('태워버릴 고민 내용을 작성해주세요!', '⚠️');
+                worryInput.focus();
+                return;
+            }
+
+            const fireCanvas = document.getElementById('fireCanvas');
+            const paperWrapper = document.getElementById('paperWrapper');
+            const burnerGlowContainer = document.getElementById('burnerGlowContainer');
+            const burnSuccess = document.getElementById('burnSuccess');
+            const ctx = fireCanvas.getContext('2d');
+
+            // Setup canvas sizes
+            fireCanvas.classList.remove('hidden');
+            const width = paperWrapper.offsetWidth;
+            const height = paperWrapper.offsetHeight;
+            fireCanvas.width = width;
+            fireCanvas.height = height;
+
+            // Glow animation container
+            burnerGlowContainer.classList.add('animate-flicker');
+
+            // Multi-layered Fire Particle Engine
+            let particles = [];
+            let burnProgress = 0; // 0 to 1
+            let animationFrame;
+
+            class FireParticle {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.size = Math.random() * 12 + 6;
+                    this.speedY = Math.random() * -4 - 2;
+                    this.speedX = (Math.random() - 0.5) * 3;
+                    this.life = 1.0;
+                    this.decay = Math.random() * 0.03 + 0.015;
+                    this.type = Math.random() > 0.3 ? 'flame' : (Math.random() > 0.5 ? 'ember' : 'smoke');
+                }
+
+                update() {
+                    this.y += this.speedY;
+                    this.x += this.speedX + Math.sin(this.y * 0.05) * 1.5;
+                    this.life -= this.decay;
+                    if (this.type === 'flame') this.size *= 0.95;
+                }
+
+                draw(ctx) {
+                    ctx.save();
+                    ctx.globalAlpha = Math.max(0, this.life);
+
+                    if (this.type === 'flame') {
+                        // Multi-stage Gradient Flame Particle
+                        const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size);
+                        grad.addColorStop(0, '#ffffff'); // Center hot white
+                        grad.addColorStop(0.2, '#ffea00'); // Bright yellow
+                        grad.addColorStop(0.6, '#ff4500'); // Orange Red
+                        grad.addColorStop(1, 'transparent');
+
+                        ctx.fillStyle = grad;
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else if (this.type === 'ember') {
+                        // Spark Ember
+                        ctx.fillStyle = Math.random() > 0.5 ? '#ff8c00' : '#ffd700';
+                        ctx.fillRect(this.x, this.y, this.size * 0.3, this.size * 0.3);
+                    } else {
+                        // Grey Smoke
+                        ctx.fillStyle = '#475569';
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, this.size * 1.5, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                }
+            }
+
+            function render() {
+                ctx.clearRect(0, 0, width, height);
+
+                burnProgress += 0.007; // Burning speed
+
+                const currentBurnY = height * (1 - burnProgress);
+
+                // 1. Draw Burn Edge & Charring (검은 그을음 & 탄 탄소 레이어)
+                ctx.fillStyle = 'rgba(15, 10, 5, 0.96)';
+                ctx.beginPath();
+                ctx.moveTo(0, height);
+                ctx.lineTo(0, currentBurnY);
+                for (let x = 0; x <= width; x += 15) {
+                    const wave = Math.sin(x * 0.05 + burnProgress * 10) * 12 + Math.cos(x * 0.02) * 8;
+                    ctx.lineTo(x, currentBurnY + wave);
+                }
+                ctx.lineTo(width, height);
+                ctx.closePath();
+                ctx.fill();
+
+                // 2. Fiery Glowing Edge Line (빨간 불씨 선)
+                ctx.strokeStyle = '#ff3300';
+                ctx.lineWidth = 6;
+                ctx.shadowColor = '#ff6600';
+                ctx.shadowBlur = 15;
+                ctx.beginPath();
+                for (let x = 0; x <= width; x += 10) {
+                    const wave = Math.sin(x * 0.05 + burnProgress * 10) * 12 + Math.cos(x * 0.02) * 8;
+                    if (x === 0) ctx.moveTo(x, currentBurnY + wave);
+                    else ctx.lineTo(x, currentBurnY + wave);
+                }
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+
+                // 3. Spawn New Particles along the burning edge
+                if (burnProgress < 1.0) {
+                    for (let i = 0; i < 14; i++) {
+                        const spawnX = Math.random() * width;
+                        const wave = Math.sin(spawnX * 0.05 + burnProgress * 10) * 12 + Math.cos(spawnX * 0.02) * 8;
+                        particles.push(new FireParticle(spawnX, currentBurnY + wave));
+                    }
+                }
+
+                // 4. Update & Draw All Particles
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    particles[i].update();
+                    particles[i].draw(ctx);
+                    if (particles[i].life <= 0) {
+                        particles.splice(i, 1);
+                    }
+                }
+
+                if (burnProgress < 1.15 || particles.length > 0) {
+                    animationFrame = requestAnimationFrame(render);
+                } else {
+                    // Burning Complete
+                    cancelAnimationFrame(animationFrame);
+                    fireCanvas.classList.add('hidden');
+                    paperWrapper.classList.add('hidden');
+                    burnerGlowContainer.classList.remove('animate-flicker');
+                    
+                    worryInput.value = '';
+                    charCount.innerText = '0 / 500자';
+                    burnSuccess.classList.remove('hidden');
+                    showToast('고민 종이가 재가 되어 깨끗이 날아갔습니다!', '🔥');
+                }
+            }
+
+            render();
+        }
+
+        function resetBurner() {
+            document.getElementById('paperWrapper').classList.remove('hidden');
+            document.getElementById('burnSuccess').classList.add('hidden');
+        }
+
+        // --- HOLD-TO-SCREAM LOGIC ---
+        const screamBtn = document.getElementById('screamBtn');
+        const intensityBar = document.getElementById('intensityBar');
+        const intensityText = document.getElementById('intensityText');
+        const screamFeedback = document.getElementById('screamFeedback');
+        const screamCard = document.getElementById('screamCard');
+
+        let isHolding = false;
+        let intensity = 0;
+        let animationFrameId = null;
+        let audioCtx = null;
+        let oscillator = null;
+        let gainNode = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function startScreamSound() {
+            try {
+                initAudio();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                
+                oscillator = audioCtx.createOscillator();
+                gainNode = audioCtx.createGain();
+
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(140, audioCtx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(480, audioCtx.currentTime + 3);
+
+                gainNode.gain.setValueAtTime(0.01, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.18, audioCtx.currentTime + 0.4);
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.start();
+            } catch (e) {}
+        }
+
+        function stopScreamSound() {
+            try {
+                if (oscillator && gainNode && audioCtx) {
+                    gainNode.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+                    setTimeout(() => {
+                        oscillator.stop();
+                        oscillator.disconnect();
+                    }, 150);
+                }
+            } catch (e) {}
+        }
+
+        function startHolding(e) {
+            e.preventDefault();
+            if (isHolding) return;
+            isHolding = true;
+            screamCard.classList.add('animate-shake-heavy');
+            screamFeedback.innerText = "소리를 질러 마음속 멍에를 방출하는 중...! 🗣️";
+            screamFeedback.className = "mt-6 text-xs text-indigo-400 font-semibold z-10 text-center h-6";
+            startScreamSound();
+
+            function updateIntensity() {
+                if (!isHolding) return;
+                if (intensity < 100) {
+                    intensity += 0.9;
+                    if (intensity > 100) intensity = 100;
+                }
+                intensityBar.style.width = intensity + '%';
+                intensityText.innerText = Math.round(intensity) + '%';
+
+                if (intensity >= 100) {
+                    screamFeedback.innerText = "최대 음량 폭발! 모든 답답함이 날아갔습니다! 🎉";
+                }
+
+                animationFrameId = requestAnimationFrame(updateIntensity);
+            }
+            animationFrameId = requestAnimationFrame(updateIntensity);
+        }
+
+        function stopHolding(e) {
+            if (!isHolding) return;
+            isHolding = false;
+            cancelAnimationFrame(animationFrameId);
+            screamCard.classList.remove('animate-shake-heavy');
+            stopScreamSound();
+
+            if (intensity >= 80) {
+                showToast('완벽합니다! 마음껏 외쳐 스트레스를 분출했습니다!', '🌟');
+                screamFeedback.innerText = "후련하시죠? 연구실 업무도 다시 힘내봅시다!";
+            } else {
+                screamFeedback.innerText = "조금 더 길게 눌러 100%까지 스트레스를 발산해보세요.";
+            }
+
+            const fadeInterval = setInterval(() => {
+                if (isHolding) {
+                    clearInterval(fadeInterval);
+                    return;
+                }
+                intensity -= 4;
+                if (intensity <= 0) {
+                    intensity = 0;
+                    clearInterval(fadeInterval);
+                }
+                intensityBar.style.width = intensity + '%';
+                intensityText.innerText = Math.round(intensity) + '%';
+            }, 30);
+        }
+
+        screamBtn.addEventListener('mousedown', startHolding);
+        screamBtn.addEventListener('mouseup', stopHolding);
+        screamBtn.addEventListener('mouseleave', stopHolding);
+        screamBtn.addEventListener('touchstart', startHolding, { passive: false });
+        screamBtn.addEventListener('touchend', stopHolding);
+        screamBtn.addEventListener('touchcancel', stopHolding);
+
+        // Soundwave Canvas Loop
+        function initScreamCanvas() {
+            const canvas = document.getElementById('screamCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+
+            let angle = 0;
+
+            function drawWaves() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (isHolding) {
+                    angle += 0.1;
+                    const centerX = canvas.width / 2;
+                    const centerY = canvas.height / 2;
+                    const maxRadius = (intensity / 100) * 160 + Math.sin(angle) * 18;
+
+                    ctx.strokeStyle = 'rgba(129, 140, 248, 0.5)';
+                    ctx.lineWidth = 2.5;
+
+                    for (let r = 30; r < maxRadius; r += 20) {
+                        ctx.beginPath();
+                        ctx.arc(centerX, centerY, r + (angle % 20), 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+                }
+                requestAnimationFrame(drawWaves);
+            }
+            drawWaves();
+        }
+
+        window.addEventListener('resize', () => {
+            const screamCanvas = document.getElementById('screamCanvas');
+            if (screamCanvas && !screamCanvas.parentElement.classList.contains('hidden')) {
+                screamCanvas.width = screamCanvas.parentElement.clientWidth;
+                screamCanvas.height = screamCanvas.parentElement.clientHeight;
+            }
+        });
+    </script>
+</body>
+</html>
